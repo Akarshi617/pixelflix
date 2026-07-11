@@ -1,89 +1,72 @@
-# PixelFlix — Sprint 08 (Phase 1)
+# PixelFlix 🎬
 
-A movie discovery SPA built with React + Vite, consuming the **OMDb API**.
+A movie browsing app I built with React + Vite. Search for movies, save favorites, and get personalized recommendations based on your mood using AI.
 
-> Note: the sprint brief points at TMDB, but OMDb was used here because TMDB
-> was unreachable (TMDB is periodically restricted in some regions, including
-> India). OMDb is a free, equivalent movie-data API. OMDb has no
-> "trending/popular" discovery endpoint (it's search-only), so the "Popular"
-> grid is hydrated from a curated list of well-known IMDb IDs on load — the
-> **Search** feature hits OMDb's live search endpoint directly, exactly as
-> the brief describes.
+## What it does
 
-## What's implemented
+- **Browse & search** movies using the OMDb API
+- **Login / Signup** so you can save your own favorites list
+- **Mood Matcher** — describe how you're feeling and it suggests movies to match (powered by Gemini)
+- **Trending row** on the landing page — horizontal scroll, snaps to each card
+- **Favorites** — heart a movie and it's saved for later
+- **Language toggle** — switch between English and Hindi
+- **Infinite scroll** on the browse grid instead of pagination
 
-**Phase 1 (P0)**
-- Fetches a **Popular Movies** grid (curated IMDb IDs) on load — poster, title, release year, rating.
-- **Search** component that queries OMDb's search endpoint and re-renders the grid.
+## Tech stack
 
-**Phase 2 (P1)**
-- **Infinite Scroll** — an `IntersectionObserver` watches a sentinel div at the bottom of the grid. When it scrolls into view, the next page is fetched and appended (works for both Popular and Search).
-- **Debounced Search** — typing doesn't fire a request per keystroke; a `useDebounce` hook waits 500ms after you stop typing before searching.
-- **Favorites (localStorage)** — click the heart on any card to save it. Favorites persist across reloads via `localStorage` and have their own "My Favorites" tab.
+- React (Vite)
+- OMDb API for movie data
+- Gemini API for the mood-based recommendations
+- Plain CSS (no framework — wanted full control over the styling)
 
-**Phase 3 (P2 — Stretch)**
-- **Lazy Loading** — every poster `<img>` uses `loading="lazy"`, so the browser only downloads posters as they scroll near the viewport.
-- **AI Mood Matcher** — a second input above the grid where you type a mood (e.g. "rainy Sunday, need a good cry"). It's sent to the Gemini API with a prompt that asks for exactly one movie title back, and that title is dropped straight into the normal search box — same debounce, same OMDb search, same grid.
+## Running it locally
 
-**Extras**
-- **Landing page** — a Netflix-style splash screen shown before Browse, with a poster-collage backdrop, Sign In / Sign Up, an English/Hindi language toggle, and a horizontally-scrolling "Trending Now" row.
-- **Login / Sign Up** — client-only demo auth stored in `localStorage` (no backend in this sprint, so passwords are plain text — fine for a college project, never for production).
+```bash
+git clone https://github.com/Akarshi617/pixelflix.git
+cd pixelflix
+npm install
+```
 
-## Setup
+You'll need your own API keys. Create a `.env` file in the root:
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-2. Get a free OMDb API key:
-   - Go to https://www.omdbapi.com/apikey.aspx
-   - Select **FREE**, enter your email, submit
-   - Check your inbox for an activation link, click it
-   - Your key arrives by email
-3. Create your env file:
-   ```bash
-   cp .env.example .env
-   ```
-   Paste your key into `.env`:
-   ```
-   VITE_OMDB_KEY=your_key_here
-   ```
-4. (Optional, for Mood Matcher) Get a free Gemini API key from
-   https://aistudio.google.com/apikey and add it to `.env`:
-   ```
-   VITE_GEMINI_KEY=your_gemini_key_here
-   ```
-5. Run the dev server:
-   ```bash
-   npm run dev
-   ```
+```
+VITE_OMDB_API_KEY=your_omdb_key_here
+VITE_GEMINI_API_KEY=your_gemini_key_here
+```
+
+- Get an OMDb key here: http://www.omdbapi.com/apikey.aspx
+- Get a Gemini key from Google AI Studio
+
+Then just:
+
+```bash
+npm run dev
+```
 
 ## Project structure
 
 ```
 src/
-  api/
-    omdb.js                     → fetch wrappers (getPopularMovies, searchMovies), both paginated
-    gemini.js                     → getMovieForMood(mood) — one title back from Gemini
-  hooks/
-    useDebounce.js             → delays a value until typing pauses for 500ms
-    useInfiniteScroll.js         → IntersectionObserver wrapper for "load next page"
-    useFavorites.js               → favorites array synced to localStorage
-    useAuth.js                     → login/signup, users synced to localStorage
-  components/
-    LandingPage.jsx                   → hero splash screen (backdrop, auth, language, trending row)
-    AuthModal.jsx                       → login/signup form used by LandingPage
-    MovieCard.jsx               → poster tile (image, title, year, rating, favorite heart)
-    MovieGrid.jsx                 → CSS grid layout of MovieCard
-    SearchBar.jsx                   → controlled search input (auto-searches via debounce)
-    MoodMatcher.jsx                   → mood input that hands a title off to the search box
-  App.jsx                           → page state, pagination, Browse/Favorites tabs
-  App.css / index.css                → styling
+  api/            → OMDb + Gemini API calls
+  components/      → LandingPage, MovieGrid, MovieCard, AuthModal, MoodMatcher, SearchBar
+  hooks/           → useAuth, useDebounce, useFavorites, useInfiniteScroll
+  i18n.js          → EN/HI translations
 ```
 
-## Deploying
+## Known issues / things I'm still working on
 
-Push this repo to GitHub, then import it in Vercel or Netlify.
-**Important:** add `VITE_OMDB_KEY` as an environment variable in your host's
-project settings — the `.env` file is git-ignored and won't deploy automatically.
+- Movie detail modal isn't built yet (clicking a poster doesn't open anything right now)
+- Download button is UI-only, doesn't actually do anything (it's a demo app, no real streaming)
+- Trending row card count on very small screens could use more testing
 
+## Why I made this
+
+Wanted to practice building something Netflix-adjacent with a real external API, actual auth, and an AI feature that wasn't just a gimmick tacked on. Still actively adding to it.
+
+## Live Demo
+
+🔗 [Check it out here](your-live-demo-link-here)
+
+## Author
+
+Developed by **Akarshi Agrahari**
