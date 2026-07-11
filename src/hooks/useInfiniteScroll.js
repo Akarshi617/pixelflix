@@ -7,8 +7,21 @@ import { useEffect, useRef } from "react";
  *
  * Returns a ref to attach to the sentinel element (an empty div placed at
  * the bottom of the grid).
+ *
+ * @param {Function} onIntersect - called when the sentinel enters the viewport
+ * @param {Object} options
+ * @param {boolean} options.enabled - set false to pause observing (e.g.
+ *   while a fetch is already in flight, or once hasMore is false)
+ * @param {string} options.rootMargin - how far before the sentinel is
+ *   visually in view to fire early; default starts loading a bit before
+ *   the user actually hits the bottom
+ * @param {number} options.threshold - fraction of the sentinel that must
+ *   be visible before firing (0–1)
  */
-export function useInfiniteScroll(onIntersect, { enabled = true } = {}) {
+export function useInfiniteScroll(
+  onIntersect,
+  { enabled = true, rootMargin = "300px", threshold = 0 } = {}
+) {
   const sentinelRef = useRef(null);
 
   // keep the latest callback in a ref so the observer below doesn't need to
@@ -30,12 +43,12 @@ export function useInfiniteScroll(onIntersect, { enabled = true } = {}) {
           callbackRef.current();
         }
       },
-      { rootMargin: "300px" } // start loading a bit before it's fully visible
+      { rootMargin, threshold }
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [enabled]);
+  }, [enabled, rootMargin, threshold]);
 
   return sentinelRef;
 }
