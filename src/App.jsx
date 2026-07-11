@@ -8,11 +8,12 @@ import { getMovieForMood } from "./api/gemini";
 import { useDebounce } from "./hooks/useDebounce";
 import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
 import { useFavorites } from "./hooks/useFavorites";
+import { useAuth } from "./hooks/useAuth";
 import "./App.css";
 
 export default function App() {
   const [query, setQuery] = useState("");
-  const debouncedQuery = useDebounce(query, 500); // Phase 2: debounce (500ms)
+  const [debouncedQuery, isSearchPending] = useDebounce(query, 500); // Phase 2: debounce (500ms)
 
   const [viewMode, setViewMode] = useState("landing"); // "landing" | "browse" | "favorites"
   const [movies, setMovies] = useState([]);
@@ -21,8 +22,10 @@ export default function App() {
   const [status, setStatus] = useState("loading"); // "loading" | "ready" | "error"
   const [errorMsg, setErrorMsg] = useState("");
   const [loadingMore, setLoadingMore] = useState(false);
+  const [retryKey, setRetryKey] = useState(0); // bump to re-trigger the load effect after a failure
 
-  const { favorites, isFavorite, toggleFavorite } = useFavorites(); // Phase 2: favorites
+  const { user } = useAuth();
+  const { favorites, isFavorite, toggleFavorite } = useFavorites(user); // Phase 2: favorites, scoped per account
 
   const [moodError, setMoodError] = useState(""); // Phase 3: mood matcher
 
@@ -47,7 +50,8 @@ export default function App() {
       : getPopularMovies(pageNum);
   }
 
-  // Fresh load whenever the debounced query changes (or we're back on Browse)
+  // Fresh load whenever the debounced query changes (or we're back on
+  // Browse, or the user hits "Try Again" after an error)
   useEffect(() => {
     if (viewMode !== "browse") return;
 
@@ -72,7 +76,7 @@ export default function App() {
       ignore = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedQuery, viewMode]);
+  }, [debouncedQuery, viewMode, retryKey]);
 
   // Phase 2: Infinite Scroll — fetch page N+1 and append when the sentinel
   // at the bottom of the grid scrolls into view
@@ -147,7 +151,7 @@ export default function App() {
           {viewMode === "favorites"
             ? "My Favorites"
             : isSearching
-            ? `Results for "${debouncedQuery.trim()}"`
+            ? `Results for "${debouncedQuery.trim()}"${isSearchPending ? "…" : ""}`
             : "Popular right now"}
         </div>
 
@@ -157,17 +161,26 @@ export default function App() {
 
         {viewMode === "browse" && status === "error" && (
           <div className="status-state status-error">
-            Something went wrong: {errorMsg}
+            <p>Something went wrong: {errorMsg}</p>
+            <button type="button" onClick={() => setRetryKey((k) => k + 1)}>
+              Try Again
+            </button>
           </div>
         )}
 
         {(viewMode === "favorites" || status === "ready") && (
           <>
-            <MovieGrid
-              movies={visibleMovies}
-              isFavorite={isFavorite}
-              onToggleFavorite={toggleFavorite}
-            />
+            {viewMode === "favorites" && favorites.length === 0 ? (
+              <div className="empty-state">
+                <p>No favorites yet — heart a movie in Browse to save it here.</p>
+              </div>
+            ) : (
+              <MovieGrid
+                movies={visibleMovies}
+                isFavorite={isFavorite}
+                onToggleFavorite={toggleFavorite}
+              />
+            )}
 
             {/* Sentinel element the IntersectionObserver watches */}
             {viewMode === "browse" && hasMore && (
