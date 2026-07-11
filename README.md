@@ -65,7 +65,7 @@ Wanted to practice building something Netflix-adjacent with a real external API,
 
 ## Live Demo
 
-🔗 https://pixelflix-steel.vercel.app/
+🔗 https://pixelflix-tawny.vercel.app/
 
 ## Author
 
